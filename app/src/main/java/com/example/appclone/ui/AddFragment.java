@@ -138,6 +138,10 @@ public class AddFragment extends Fragment {
     }
 
     private void onConfirmClone(String pkg, String label) {
+        // The Activity listener survives tab changes; FragmentResult retains delivery
+        // until the current Activity reaches STARTED after recreation.
+        final androidx.fragment.app.FragmentManager resultManager = getParentFragmentManager();
+        final android.os.Handler resultHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         progressDlg = CloneProgressDialog.newInstance(pkg, label);
         progressDlg.show(getChildFragmentManager(), "progress");
         new Thread(() -> {
@@ -145,6 +149,8 @@ public class AddFragment extends Fragment {
                 int userId = clones.getOrCreateCloneUser();
                 setProgressStatus(R.string.cloning_step_setup);
                 clones.cloneApp(userId, pkg);
+                resultHandler.post(() -> resultManager.setFragmentResult(
+                        MainActivity.CLONES_CHANGED, new Bundle()));
                 // Cấp quyền camera/mic/ảnh ngay sau khi nhân bản (best-effort)
                 clones.grantMediaPermissions(userId, pkg);
                 uiRun(() -> {
@@ -155,6 +161,8 @@ public class AddFragment extends Fragment {
                     }
                 });
             } catch (Exception e) {
+                resultHandler.post(() -> resultManager.setFragmentResult(
+                        MainActivity.CLONES_CHANGED, new Bundle()));
                 uiRun(() -> {
                     dismissProgress();
                     Toast.makeText(getContext(),

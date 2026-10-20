@@ -26,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
     public static final String ACTION_LAUNCH_CLONE = "com.example.appclone.LAUNCH_CLONE";
     public static final String EXTRA_PKG = "pkg";
 
+    public static final String CLONES_CHANGED = "appclone.clones_changed";
+
     private View statusDot;
     private BottomNavigationView bottomNav;
 
@@ -94,6 +96,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        getSupportFragmentManager().setFragmentResultListener(CLONES_CHANGED, this,
+                (key, result) -> refreshClones());
+
+        bottomNav.setOnItemReselectedListener(item -> {
+            if (item.getItemId() == R.id.nav_clones) refreshClones();
+        });
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_clones) {
@@ -162,10 +170,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchTo(Fragment f) {
-        if (f == active) return;
+        if (f == active) {
+            if (f == clonesFragment) refreshClones();
+            return;
+        }
         getSupportFragmentManager().beginTransaction()
-                .hide(active).show(f).commit();
+                .hide(active).show(f)
+                .runOnCommit(() -> {
+                    if (f == clonesFragment) refreshClones();
+                }).commit();
         active = f;
+    }
+
+    private void refreshClones() {
+        if (clonesFragment instanceof ClonesFragment) {
+            ((ClonesFragment) clonesFragment).refresh();
+        }
     }
 
     /** Cho ClonesFragment gọi khi bấm FAB "+ Nhân bản". */
@@ -197,5 +217,6 @@ public class MainActivity extends AppCompatActivity {
             dot = R.drawable.dot_green;
         }
         statusDot.setBackground(ContextCompat.getDrawable(this, dot));
+        refreshClones();
     }
 }

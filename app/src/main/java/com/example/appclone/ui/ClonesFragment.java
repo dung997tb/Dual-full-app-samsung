@@ -39,6 +39,13 @@ public class ClonesFragment extends Fragment {
     private View fab;
     private View btnRefresh;
     private CloneManager clones;
+    private int loadGeneration;
+    private boolean refreshScheduled;
+    private final android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable refreshTask = () -> {
+        refreshScheduled = false;
+        if (isAdded() && getView() != null && !isHidden()) load();
+    };
 
     @Nullable
     @Override
@@ -62,17 +69,43 @@ public class ClonesFragment extends Fragment {
         btnGuide.setOnClickListener(x -> host.showShizukuGuide());
         btnGrant.setOnClickListener(x -> host.requestShizukuPermission());
         fab.setOnClickListener(x -> host.goToAddTab());
-        btnRefresh.setOnClickListener(x -> load());
+        btnRefresh.setOnClickListener(x -> refresh());
         return v;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        load();
+        refresh();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden) refresh();
+        else ++loadGeneration;
+    }
+
+    public void refresh() {
+        if (!isAdded() || getView() == null || isHidden()) return;
+        ++loadGeneration; // Invalidate old scans immediately, before scheduling another one.
+        if (refreshScheduled) return;
+        refreshScheduled = true;
+        main.post(refreshTask);
+    }
+
+    @Override
+    public void onDestroyView() {
+        ++loadGeneration;
+        main.removeCallbacks(refreshTask);
+        refreshScheduled = false;
+        super.onDestroyView();
     }
 
     private void load() {
+        final int generation = ++loadGeneration;
+        final android.content.Context context = requireContext().getApplicationContext();
+        final CloneManager manager = clones;
         boolean ready = ShizukuHelper.hasPermission();
         warnCard.setVisibility(ready ? View.GONE : View.VISIBLE);
         progress.setVisibility(View.VISIBLE);
@@ -83,26 +116,25 @@ public class ClonesFragment extends Fragment {
             try {
                 if (!ready) {
                     list = Collections.emptyList();
-                    emptyMsg = getString(R.string.toast_need_shizuku);
+                    emptyMsg = context.getString(R.string.toast_need_shizuku);
                 } else {
-                    int userId = clones.findCloneUser();
+                    int userId = manager.findCloneUser();
                     if (userId == -1) {
                         list = Collections.emptyList();
-                        emptyMsg = getString(R.string.empty_clones);
+                        emptyMsg = context.getString(R.string.empty_clones);
                     } else {
-                        list = clones.getClones(userId);
-                        emptyMsg = getString(R.string.empty_clones);
+                        list = manager.getClones(userId);
+                        emptyMsg = context.getString(R.string.empty_clones);
                     }
                 }
             } catch (Exception e) {
                 list = Collections.emptyList();
-                emptyMsg = getString(R.string.toast_error, e.getMessage());
+                emptyMsg = context.getString(R.string.toast_error, e.getMessage());
             }
-            if (!isAdded()) return;
             List<AppEntry> finalList = list;
             String finalMsg = emptyMsg;
-            requireActivity().runOnUiThread(() -> {
-                if (!isAdded()) return;
+            main.post(() -> {
+                if (!isAdded() || getView() == null || isHidden() || generation != loadGeneration) return;
                 progress.setVisibility(View.GONE);
                 tvSectionTitle.setText(getString(R.string.cloned_title, finalList.size()));
                 if (finalList.isEmpty()) {
@@ -184,7 +216,7 @@ public class ClonesFragment extends Fragment {
                 int userId = clones.requireCloneUser();
                 clones.removeClone(userId, app.packageName);
                 uiToast(getString(R.string.toast_deleted, app.label));
-                if (isAdded()) requireActivity().runOnUiThread(this::load);
+                main.post(this::refresh);
             } catch (Exception e) {
                 uiToast(getString(R.string.toast_error, e.getMessage()));
             }
