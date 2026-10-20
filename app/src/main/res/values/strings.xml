@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AppClone</string>
+    <string name="title">AppClone</string>
+    <string name="tagline">Nhân bản &amp; Chạy song song ứng dụng</string>
+    <string name="version">Phiên bản 1.0</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_clones">Bản sao</string>
+    <string name="nav_add">Thêm mới</string>
+    <string name="nav_settings">Cài đặt</string>
+
+    <!-- Tab Bản sao -->
+    <string name="warn_title">Chưa kết nối Shizuku</string>
+    <string name="warn_desc">Để nhân bản các ứng dụng trên máy, hãy kết nối Shizuku qua Gỡ lỗi không dây một lần duy nhất.</string>
+    <string name="btn_view_guide">Xem hướng dẫn</string>
+    <string name="btn_grant">Cấp quyền</string>
+    <string name="cloned_title">Ứng dụng đã nhân bản (%1$d)</string>
+    <string name="clone_suffix">(Bản sao)</string>
+    <string name="badge_independent">Bản sao độc lập</string>
+    <string name="active_independent">Hoạt động độc lập</string>
+    <string name="btn_open_clone">▶ Mở bản sao</string>
+    <string name="btn_parallel">Chạy song song</string>
+    <string name="fab_clone">+ Nhân bản</string>
+    <string name="empty_clones">Chưa có app nhân bản nào.\nBấm nút + Nhân bản để bắt đầu.</string>
+    <string name="menu_delete">Xóa bản sao</string>
+    <string name="menu_pin">Ghim ra màn hình chính</string>
+    <string name="toast_pinned">Đã ghim %1$s ra màn hình chính</string>
+    <string name="toast_pin_failed">Máy không hỗ trợ ghim shortcut</string>
+    <string name="dialog_delete_title">Xóa bản nhân bản?</string>
+    <string name="dialog_delete_msg">Xóa %1$s khỏi không gian nhân bản?</string>
+    <string name="dialog_ok">Xóa</string>
+    <string name="dialog_cancel">Hủy</string>
+
+    <!-- Tab Thêm mới -->
+    <string name="btn_clone">Nhân bản</string>
+    <string name="btn_clone_add">+ Nhân bản</string>
+    <string name="empty_installed">Không tìm thấy app nào</string>
+    <string name="search_hint">Tìm ứng dụng…</string>
+    <string name="all_apps">Tất cả ứng dụng (%1$d)</string>
+
+    <!-- Dialog nhân bản -->
+    <string name="clone_confirm_title">Nhân bản %1$s</string>
+    <string name="clone_confirm_desc">Tạo một bản sao hoàn toàn độc lập cho %1$s để bạn có thể đăng nhập thêm tài khoản thứ hai và sử dụng song song cùng lúc.</string>
+    <string name="btn_cancel">Hủy</string>
+    <string name="btn_create_clone">Tạo bản sao</string>
+    <string name="cloning_title">Đang nhân bản %1$s</string>
+    <string name="cloning_step_space">Đang khởi tạo không gian độc lập…</string>
+    <string name="cloning_step_setup">Đang thiết lập bản sao song song…</string>
+    <string name="clone_success_title">Nhân bản thành công!</string>
+    <string name="clone_success_desc">Bản sao của %1$s đã sẵn sàng hoạt động.</string>
+
+    <!-- Cài đặt -->
+    <string name="section_guide">HƯỚNG DẪN &amp; KẾT NỐI</string>
+    <string name="section_about">VỀ ỨNG DỤNG</string>
+    <string name="row_guide_title">Hướng dẫn kết nối Shizuku</string>
+    <string name="row_guide_desc">Chi tiết các bước ghép nối qua Wi-Fi không cần máy tính</string>
+    <string name="row_perm_title">Trạng thái quyền Shizuku</string>
+    <string name="perm_granted">Đã được cấp quyền</string>
+    <string name="perm_denied">Chưa được cấp quyền</string>
+    <string name="perm_nobinder">Shizuku chưa chạy</string>
+    <string name="row_media_title">Khôi phục Album ảnh, File &amp; Camera</string>
+    <string name="row_media_desc">Cấp quyền camera/mic/ảnh cho các app nhân bản (pm grant)</string>
+    <string name="row_native_title">Công nghệ Native Profile</string>
+    <string name="row_native_desc">Tận dụng phân vùng độc lập của hệ điều hành, an toàn, không bị chặn</string>
+    <string name="row_perf_title">Hiệu năng tối đa</string>
+    <string name="row_perf_desc">Không tốn pin và RAM như các app giả lập ảo hoá (Virtual Space)</string>
+    <string name="row_privacy_title">Bảo mật &amp; Riêng tư</string>
+    <string name="row_privacy_desc">Dữ liệu bản sao nằm trên máy, hoàn toàn không gửi ra ngoài</string>
+    <string name="dialog_close">Đóng</string>
+
+    <!-- Dialog hướng dẫn Shizuku -->
+    <string name="guide_title">Hướng dẫn kết nối Shizuku</string>
+    <string name="guide_sub">Thực hiện 1 lần duy nhất ngay trên máy</string>
+    <string name="step1_title">Cài đặt ứng dụng Shizuku</string>
+    <string name="step1_desc">Tải và cài đặt ứng dụng Shizuku miễn phí từ Google Play Store (hoặc GitHub) trên điện thoại của bạn.</string>
+    <string name="step2_title">Bật Gỡ lỗi qua Wi-Fi (Wireless Debugging)</string>
+    <string name="step2_desc">Vào Cài đặt điện thoại -&gt; Cài đặt cho người phát triển -&gt; Bật tính năng \u2018Gỡ lỗi qua Wi-Fi\u2019 (điện thoại cần kết nối Wi-Fi).</string>
+    <string name="step3_title">Ghép nối mã 6 chữ số</string>
+    <string name="step3_desc">Mở app Shizuku -&gt; Nhấn \u2018Ghép nối qua gỡ lỗi không dây\u2019 -&gt; Chọn \u2018Ghép nối thiết bị bằng mã ghép nối\u2019 và nhập mã 6 số do điện thoại cung cấp.</string>
+    <string name="step4_title">Khởi chạy &amp; Cấp quyền cho AppClone</string>
+    <string name="step4_desc">Quay lại Shizuku, bấm nút \u2018Bắt đầu\u2019 (Start). Sau đó vào mục \u2018Ủy quyền ứng dụng\u2019 và bật công tắc cho AppClone.</string>
+    <string name="btn_open_settings">Mở Cài đặt</string>
+    <string name="btn_open_shizuku">Mở Shizuku</string>
+
+    <!-- Chung -->
+    <string name="toast_need_shizuku">Cần cấp quyền Shizuku trước đã</string>
+    <string name="toast_cloned">Đã nhân bản %1$s</string>
+    <string name="toast_deleted">Đã xóa %1$s</string>
+    <string name="toast_opened">Đang mở %1$s…</string>
+    <string name="toast_parallel">Đang chạy song song %1$s…</string>
+    <string name="toast_error">Lỗi: %1$s</string>
+    <string name="toast_media_done">Đã cấp quyền cho %1$d app nhân bản</string>
+    <string name="toast_no_shizuku_app">Chưa cài app Shizuku</string>
+</resources>

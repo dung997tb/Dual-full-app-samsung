@@ -1,0 +1,12 @@
+# Gradle / Android
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+
+# Font .ttf được tự giải mã từ app/fonts-src/ khi build, không commit
+app/src/main/res/font/*.ttf
+
+# OS
+.DS_Store

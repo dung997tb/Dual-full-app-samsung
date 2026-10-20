@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AppClone" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/ubuntu_orange</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
+        <item name="android:statusBarColor">@color/header_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/header_dark</item>
+        <item name="android:windowBackground">@color/bg</item>
+    </style>
+</resources>

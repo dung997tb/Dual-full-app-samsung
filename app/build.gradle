@@ -1,0 +1,57 @@
+plugins {
+    id("com.android.application")
+}
+
+android {
+    namespace = "com.example.appclone"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.example.appclone"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
+    // Shizuku: chạy lệnh shell với quyền ADB, không cần root
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
+}
+
+// Font Inter được lưu dạng base64 trong app/fonts-src/ (để repo chỉ chứa file text).
+// Task này tự giải mã ra .ttf vào res/font/ trước mỗi lần build.
+def unpackFonts = tasks.register("unpackFonts") {
+    doLast {
+        File srcDir = file("fonts-src")
+        File fontDir = file("src/main/res/font")
+        fontDir.mkdirs()
+        srcDir.eachFileMatch(~/.*\.ttf\.b64/) { File b64 ->
+            File ttf = new File(fontDir, b64.name.replace(".b64", ""))
+            if (!ttf.exists()) {
+                ttf.bytes = b64.text.trim().decodeBase64()
+                println "Unpacked font: ${ttf.name}"
+            }
+        }
+    }
+}
+tasks.named("preBuild").configure { dependsOn(unpackFonts) }
