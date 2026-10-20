@@ -54,7 +54,7 @@ public class CloneAdapter extends RecyclerView.Adapter<CloneAdapter.Holder> {
     @Override
     public void onBindViewHolder(@NonNull Holder h, int position) {
         AppEntry app = apps.get(position);
-        h.name.setText(app.label + " " + h.itemView.getContext().getString(R.string.clone_suffix));
+        h.name.setText(app.label + " · " + app.profileLabel + " · user " + app.userId);
         if (app.icon != null) {
             h.icon.setImageDrawable(app.icon);
         } else {

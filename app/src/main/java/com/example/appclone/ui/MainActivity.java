@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     /** Action mở bản sao từ shortcut ghim ngoài màn hình chính. */
     public static final String ACTION_LAUNCH_CLONE = "com.example.appclone.LAUNCH_CLONE";
     public static final String EXTRA_PKG = "pkg";
+    public static final String EXTRA_USER = "user_id";
 
     public static final String CLONES_CHANGED = "appclone.clones_changed";
 
@@ -156,8 +157,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 com.example.appclone.clone.CloneManager cm =
                         new com.example.appclone.clone.CloneManager(this);
-                int userId = cm.requireCloneUser(); // không tự tạo
-                if (!cm.isTracked(pkg, userId) || !cm.isInstalledForUser(userId, pkg)) {
+                int userId = intent.getIntExtra(EXTRA_USER, -1);
+                if (userId == -1) userId = cm.requireCloneUser(); // Legacy shortcuts target clone only.
+                if (!cm.isInstalledForUser(userId, pkg)) {
                     throw new Exception("Bản sao không còn hợp lệ");
                 }
                 cm.launchClone(userId, pkg);

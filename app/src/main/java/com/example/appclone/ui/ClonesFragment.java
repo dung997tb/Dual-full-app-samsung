@@ -118,14 +118,9 @@ public class ClonesFragment extends Fragment {
                     list = Collections.emptyList();
                     emptyMsg = context.getString(R.string.toast_need_shizuku);
                 } else {
-                    int userId = manager.findCloneUser();
-                    if (userId == -1) {
-                        list = Collections.emptyList();
-                        emptyMsg = context.getString(R.string.empty_clones);
-                    } else {
-                        list = manager.getClones(userId);
-                        emptyMsg = context.getString(R.string.empty_clones);
-                    }
+                    list = manager.getAllClones();
+                    emptyMsg = manager.getScanWarning().isEmpty()
+                            ? context.getString(R.string.empty_clones) : manager.getScanWarning();
                 }
             } catch (Exception e) {
                 list = Collections.emptyList();
@@ -136,6 +131,8 @@ public class ClonesFragment extends Fragment {
             main.post(() -> {
                 if (!isAdded() || getView() == null || isHidden() || generation != loadGeneration) return;
                 progress.setVisibility(View.GONE);
+                tvSectionSub.setText(manager.getScanWarning().isEmpty()
+                        ? "Các profile truy cập được · thao tác theo đúng user" : manager.getScanWarning());
                 tvSectionTitle.setText(getString(R.string.cloned_title, finalList.size()));
                 if (finalList.isEmpty()) {
                     tvEmpty.setText(finalMsg);
@@ -154,7 +151,7 @@ public class ClonesFragment extends Fragment {
         }
         new Thread(() -> {
             try {
-                int userId = clones.requireCloneUser();
+                int userId = app.userId;
                 clones.launchClone(userId, app.packageName);
                 uiToast(getString(R.string.toast_opened, app.label));
             } catch (Exception e) {
@@ -170,7 +167,7 @@ public class ClonesFragment extends Fragment {
         }
         new Thread(() -> {
             try {
-                int userId = clones.requireCloneUser();
+                int userId = app.userId;
                 clones.launchParallel(app.packageName, userId, requireContext());
                 uiToast(getString(R.string.toast_parallel, app.label));
             } catch (Exception e) {
@@ -195,7 +192,7 @@ public class ClonesFragment extends Fragment {
     }
 
     private void onPinClicked(AppEntry app) {
-        boolean ok = ShortcutHelper.pinCloneShortcut(requireContext(), app.packageName, app.label);
+        boolean ok = ShortcutHelper.pinCloneShortcut(requireContext(), app.packageName, app.label, app.userId);
         Toast.makeText(getContext(),
                 ok ? getString(R.string.toast_pinned, app.label) : getString(R.string.toast_pin_failed),
                 Toast.LENGTH_LONG).show();
@@ -204,7 +201,8 @@ public class ClonesFragment extends Fragment {
     private void confirmDelete(AppEntry app) {
         new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.dialog_delete_title)
-                .setMessage(getString(R.string.dialog_delete_msg, app.label))
+                .setMessage(getString(R.string.dialog_delete_msg, app.label)
+                        + "\n" + app.profileLabel + " · user " + app.userId)
                 .setPositiveButton(R.string.dialog_ok, (d, w) -> doDelete(app))
                 .setNegativeButton(R.string.dialog_cancel, null)
                 .show();
@@ -213,7 +211,7 @@ public class ClonesFragment extends Fragment {
     private void doDelete(AppEntry app) {
         new Thread(() -> {
             try {
-                int userId = clones.requireCloneUser();
+                int userId = app.userId;
                 clones.removeClone(userId, app.packageName);
                 uiToast(getString(R.string.toast_deleted, app.label));
                 main.post(this::refresh);

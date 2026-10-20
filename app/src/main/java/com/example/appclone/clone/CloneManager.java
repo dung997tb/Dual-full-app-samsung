@@ -162,62 +162,38 @@ public class CloneManager {
 
     // -------- NHẬN DIỆN CLONE PROFILE --------
 
-    private boolean isRecognizedCloneName(String name) {
-        String normalized = name.toLowerCase(Locale.ROOT)
-                .replace("_", "")
-                .replace("-", "")
-                .replace(" ", "");
+    private String scanWarning = "";
+    public String getScanWarning() { return scanWarning; }
 
-        return normalized.equals("dualapp")
-                || normalized.equals("dualmessenger")
-                || normalized.equals("appclone")
-                || normalized.equals("clone");
+    private List<ProfileParser.Profile> profiles() throws Exception {
+        CommandResult result = ShizukuHelper.runCommand("dumpsys user");
+        if (!result.isSuccess()) throw new Exception("Không đọc được profiles: " + result.allOutput());
+        return ProfileParser.parse(result.stdout);
     }
 
-    /**
-     * Tìm clone profile bằng pm list users.
-     *
-     * Không tự chọn user chỉ vì có ID 95 hoặc 999.
-     * Không chọn Secure Folder hay Work Profile
-     * khi chưa nhận diện được.
-     */
     public int findCloneUser() throws Exception {
-        CommandResult r =
-                ShizukuHelper.runCommand("pm list users");
-
-        if (!r.isSuccess()) {
-            throw new Exception(
-                    "Không đọc được Android users: "
-                            + r.allOutput().trim());
+        int found = -1;
+        for (ProfileParser.Profile profile : profiles()) {
+            if (!profile.type.endsWith(".CLONE")) continue;
+            if (found != -1) throw new Exception("Có nhiều clone profile. Cần chọn profile để tạo bản sao.");
+            found = profile.id;
         }
+        return found;
+    }
 
-        Set<Integer> candidates = new HashSet<>();
-
-        Matcher matcher = USER_PATTERN.matcher(r.stdout);
-
-        while (matcher.find()) {
-            int id = Integer.parseInt(matcher.group(1));
-            String name = matcher.group(2).trim();
-
-            if (id == 0) continue;
-
-            if (isRecognizedCloneName(name)) {
-                candidates.add(id);
-            }
+    public List<AppEntry> getAllClones() throws Exception {
+        List<AppEntry> all = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        for (ProfileParser.Profile profile : profiles()) {
+            try { all.addAll(getClones(profile.id)); }
+            catch (Exception e) { warnings.add("User " + profile.id + ": " + e.getMessage()); }
         }
-
-        if (candidates.isEmpty()) return -1;
-
-        int saved = loadCloneUserId();
-        if (candidates.contains(saved)) return saved;
-
-        if (candidates.size() == 1) {
-            return candidates.iterator().next();
-        }
-
-        throw new Exception(
-                "Có nhiều clone profile: " + candidates
-                + ". Không tự chọn để tránh nhầm dữ liệu.");
+        scanWarning = android.text.TextUtils.join("; ", warnings);
+        all.sort((a, b) -> {
+            int byUser = Integer.compare(a.userId, b.userId);
+            return byUser != 0 ? byUser : a.label.compareToIgnoreCase(b.label);
+        });
+        return all;
     }
 
     private boolean userExists(int userId) throws Exception {
@@ -307,13 +283,10 @@ public class CloneManager {
 
     private void requireCorrectUser(int userId)
             throws Exception {
-        int recognized = requireCloneUser();
-
-        if (recognized != userId) {
-            throw new Exception(
-                    "Sai clone profile. Yêu cầu user "
-                    + recognized + ", nhận " + userId);
+        for (ProfileParser.Profile profile : profiles()) {
+            if (profile.id == userId) return;
         }
+        throw new Exception("User " + userId + " không phải profile được xác minh của user 0");
     }
 
     // -------- ĐỌC PACKAGE TRONG PROFILE --------
@@ -389,6 +362,10 @@ public class CloneManager {
         candidates.remove(ctx.getPackageName());
 
         List<AppEntry> result = new ArrayList<>();
+        String profileLabel = "Profile";
+        for (ProfileParser.Profile profile : profiles()) {
+            if (profile.id == userId) { profileLabel = profile.label(); break; }
+        }
 
         for (String pkg : candidates) {
             boolean managed = tracked.contains(pkg);
@@ -396,7 +373,7 @@ public class CloneManager {
             // Loại package nền không có launcher.
             // Giữ lại app đã được AppClone quản lý.
             if (!managed
-                    && pm.getLaunchIntentForPackage(pkg) == null) {
+                    && resolveLauncher(userId, pkg) == null) {
                 continue;
             }
 
@@ -417,7 +394,7 @@ public class CloneManager {
                 icon = pm.getApplicationIcon(ai);
             } catch (Exception ignored) {}
 
-            result.add(new AppEntry(pkg, label, icon));
+            result.add(new AppEntry(pkg, label, icon, userId, profileLabel));
         }
 
         result.sort((a, b) ->
@@ -476,12 +453,7 @@ public class CloneManager {
         validatePackage(pkg);
         requireCorrectUser(userId);
 
-        // Không được xóa bản sao cũ do công cụ khác tạo.
-        if (!isTracked(pkg, userId)) {
-            throw new Exception(
-                    "Bản sao có sẵn không do AppClone "
-                    + "quản lý. Đã chặn thao tác xóa.");
-        }
+        if (!isInstalledForUser(userId, pkg)) throw new Exception("Bản sao không còn tồn tại trong user " + userId);
 
         CommandResult r = ShizukuHelper.runCommand(
                 "pm uninstall --user "
@@ -516,19 +488,12 @@ public class CloneManager {
                     "App không tồn tại trong clone profile");
         }
 
-        Intent li = pm.getLaunchIntentForPackage(pkg);
-
-        ComponentName cn =
-                li != null ? li.getComponent() : null;
-
-        if (cn == null) {
-            throw new Exception(
-                    "Không tìm thấy màn hình khởi chạy");
-        }
+        String component = resolveLauncher(userId, pkg);
+        if (component == null) throw new Exception("Không tìm thấy launcher trong user " + userId);
 
         CommandResult r = ShizukuHelper.runCommand(
                 "am start --user " + userId
-                + " -n " + cn.flattenToShortString()
+                + " -n " + component
         );
 
         if (!r.isSuccess()
@@ -537,6 +502,18 @@ public class CloneManager {
                     "Mở bản sao thất bại: "
                             + r.allOutput().trim());
         }
+    }
+
+    private String resolveLauncher(int userId, String pkg) throws Exception {
+        validatePackage(pkg);
+        CommandResult r = ShizukuHelper.runCommand("cmd package resolve-activity --brief --user " + userId
+                + " -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p " + pkg);
+        if (!r.isSuccess()) throw new Exception("Không đọc được launcher: " + r.allOutput());
+        for (String line : r.stdout.split("\\r?\\n")) {
+            String component = line.trim();
+            if (component.matches("[A-Za-z0-9_.$]+/[A-Za-z0-9_.$]+")) return component;
+        }
+        return null;
     }
 
     public void launchOriginal(String pkg, Context c)

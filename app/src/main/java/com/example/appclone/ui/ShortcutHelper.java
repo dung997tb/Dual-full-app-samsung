@@ -24,7 +24,7 @@ public final class ShortcutHelper {
      * Bấm vào shortcut -> mở MainActivity kèm action LAUNCH_CLONE,
      * MainActivity sẽ tự mở bản sao tương ứng.
      */
-    public static boolean pinCloneShortcut(Context ctx, String pkg, String label) {
+    public static boolean pinCloneShortcut(Context ctx, String pkg, String label, int userId) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false;
         try {
             ShortcutManager sm = ctx.getSystemService(ShortcutManager.class);
@@ -45,8 +45,9 @@ public final class ShortcutHelper {
             Intent intent = new Intent(ctx, MainActivity.class);
             intent.setAction(MainActivity.ACTION_LAUNCH_CLONE);
             intent.putExtra(MainActivity.EXTRA_PKG, pkg);
+            intent.putExtra(MainActivity.EXTRA_USER, userId);
 
-            ShortcutInfo info = new ShortcutInfo.Builder(ctx, "clone_" + pkg)
+            ShortcutInfo info = new ShortcutInfo.Builder(ctx, "clone_" + userId + "_" + pkg)
                     .setShortLabel(label + " " + ctx.getString(R.string.clone_suffix))
                     .setLongLabel(label + " " + ctx.getString(R.string.clone_suffix))
                     .setIcon(Icon.createWithBitmap(bmp))
