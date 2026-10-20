@@ -8,6 +8,13 @@ Mở full tính năng miễn phí, không giới hạn số app.
 - **Đào Mạnh Dũng** — người tạo
 - **Muse AI** — đồng tạo
 
+## Tải app
+
+- **[Tải APK mới nhất](https://github.com/dung997tb/Dual-full-app-samsung/releases/latest/download/app-debug.apk)** — bản build tự động mới nhất từ GitHub Releases
+- [Xem tất cả các bản phát hành](https://github.com/dung997tb/Dual-full-app-samsung/releases)
+
+> APK là bản debug (ký bằng debug key) nên Android/Play Protect có thể hiện cảnh báo khi cài — bấm vẫn cài tiếp là được.
+
 ## Tính năng
 
 - Tab **Bản sao**: thẻ cảnh báo Shizuku, danh sách app đã nhân bản
