@@ -3,7 +3,6 @@ package com.example.appclone.ui;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,7 +14,7 @@ import com.example.appclone.model.AppEntry;
 
 import java.util.List;
 
-/** Adapter cho tab "Bản sao". */
+/** Adapter cho tab "Bản sao" — lưới icon kiểu launcher: chạm để mở, chạm giữ để mở menu. */
 public class CloneAdapter extends RecyclerView.Adapter<CloneAdapter.Holder> {
 
     public interface OnOpenClick {
@@ -54,15 +53,29 @@ public class CloneAdapter extends RecyclerView.Adapter<CloneAdapter.Holder> {
     @Override
     public void onBindViewHolder(@NonNull Holder h, int position) {
         AppEntry app = apps.get(position);
-        h.name.setText(app.label + " · " + app.profileLabel + " · user " + app.userId);
+        h.name.setText(app.label);
+        h.sub.setText(app.userId >= 0
+                ? shortProfile(app.profileLabel) + " · " + app.userId
+                : shortProfile(app.profileLabel));
         if (app.icon != null) {
             h.icon.setImageDrawable(app.icon);
         } else {
             h.icon.setImageResource(android.R.drawable.sym_def_app_icon);
         }
-        h.btnOpen.setOnClickListener(v -> openListener.onOpen(app));
-        h.btnParallel.setOnClickListener(v -> parallelListener.onParallel(app));
-        h.btnMenu.setOnClickListener(v -> menuListener.onMenu(app, v));
+        h.itemView.setOnClickListener(v -> openListener.onOpen(app));
+        h.itemView.setOnLongClickListener(v -> {
+            menuListener.onMenu(app, v);
+            return true;
+        });
+    }
+
+    /** Nhãn profile rút gọn để hiện dưới tên app trong ô lưới. */
+    private static String shortProfile(String profileLabel) {
+        if (profileLabel == null || profileLabel.isEmpty()) return "Profile";
+        if (profileLabel.contains("Dual")) return "Dual";
+        if (profileLabel.contains("Công việc")) return "Công việc";
+        if (profileLabel.contains("Riêng")) return "Riêng tư";
+        return profileLabel;
     }
 
     @Override
@@ -73,17 +86,13 @@ public class CloneAdapter extends RecyclerView.Adapter<CloneAdapter.Holder> {
     static class Holder extends RecyclerView.ViewHolder {
         ImageView icon;
         TextView name;
-        Button btnOpen;
-        Button btnParallel;
-        ImageView btnMenu;
+        TextView sub;
 
         Holder(View v) {
             super(v);
             icon = v.findViewById(R.id.icon);
             name = v.findViewById(R.id.name);
-            btnOpen = v.findViewById(R.id.btnOpen);
-            btnParallel = v.findViewById(R.id.btnParallel);
-            btnMenu = v.findViewById(R.id.btnMenu);
+            sub = v.findViewById(R.id.sub);
         }
     }
 }

@@ -16,6 +16,7 @@
     <string name="btn_view_guide">Xem hướng dẫn</string>
     <string name="btn_grant">Cấp quyền</string>
     <string name="cloned_title">Ứng dụng đã nhân bản (%1$d)</string>
+    <string name="clones_hint">Chạm để mở · chạm giữ để tuỳ chọn</string>
     <string name="clone_suffix">(Bản sao)</string>
     <string name="badge_independent">Bản sao độc lập</string>
     <string name="active_independent">Hoạt động độc lập</string>

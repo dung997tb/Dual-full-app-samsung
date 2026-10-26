@@ -14,7 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.appclone.R;
@@ -62,7 +62,7 @@ public class ClonesFragment extends Fragment {
         tvEmpty = v.findViewById(R.id.tvEmpty);
         fab = v.findViewById(R.id.fab);
         btnRefresh = v.findViewById(R.id.btnRefresh);
-        rv.setLayoutManager(new LinearLayoutManager(getContext()));
+        rv.setLayoutManager(new GridLayoutManager(getContext(), 4));
         clones = new CloneManager(requireContext());
 
         MainActivity host = (MainActivity) requireActivity();
@@ -131,8 +131,9 @@ public class ClonesFragment extends Fragment {
             main.post(() -> {
                 if (!isAdded() || getView() == null || isHidden() || generation != loadGeneration) return;
                 progress.setVisibility(View.GONE);
+                tvSectionSub.setVisibility(View.VISIBLE);
                 tvSectionSub.setText(manager.getScanWarning().isEmpty()
-                        ? "Các profile truy cập được · thao tác theo đúng user" : manager.getScanWarning());
+                        ? getString(R.string.clones_hint) : manager.getScanWarning());
                 tvSectionTitle.setText(getString(R.string.cloned_title, finalList.size()));
                 if (finalList.isEmpty()) {
                     tvEmpty.setText(finalMsg);
@@ -178,13 +179,24 @@ public class ClonesFragment extends Fragment {
 
     private void onMenuClicked(AppEntry app, View anchor) {
         PopupMenu menu = new PopupMenu(requireContext(), anchor);
-        menu.getMenu().add(0, 1, 0, getString(R.string.menu_pin));
-        menu.getMenu().add(0, 2, 1, getString(R.string.menu_delete));
+        menu.getMenu().add(0, 1, 0, getString(R.string.btn_open_clone));
+        menu.getMenu().add(0, 2, 1, getString(R.string.btn_parallel));
+        menu.getMenu().add(0, 3, 2, getString(R.string.menu_pin));
+        menu.getMenu().add(0, 4, 3, getString(R.string.menu_delete));
         menu.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == 1) {
-                onPinClicked(app);
-            } else {
-                confirmDelete(app);
+            switch (item.getItemId()) {
+                case 1:
+                    onOpenClicked(app);
+                    break;
+                case 2:
+                    onParallelClicked(app);
+                    break;
+                case 3:
+                    onPinClicked(app);
+                    break;
+                default:
+                    confirmDelete(app);
+                    break;
             }
             return true;
         });

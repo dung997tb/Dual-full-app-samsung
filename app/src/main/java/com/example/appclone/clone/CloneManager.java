@@ -16,8 +16,10 @@ import com.example.appclone.shizuku.ShizukuHelper;
 import com.example.appclone.shizuku.ShizukuHelper.CommandResult;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -367,6 +369,10 @@ public class CloneManager {
             if (profile.id == userId) { profileLabel = profile.label(); break; }
         }
 
+        // Nhãn/icon đúng theo từng profile (app chỉ cài trong profile khác
+        // thì PackageManager của user 0 không lấy được -> hiện package name).
+        Map<String, Object[]> launcher = launcherEntries(userId);
+
         for (String pkg : candidates) {
             boolean managed = tracked.contains(pkg);
 
@@ -380,19 +386,31 @@ public class CloneManager {
             String label = pkg;
             Drawable icon = null;
 
-            try {
-                ApplicationInfo ai =
-                        pm.getApplicationInfo(pkg, 0);
+            Object[] le = launcher.get(pkg);
+            if (le != null) {
+                if (le[0] != null) label = le[0].toString();
+                icon = (Drawable) le[1];
+            }
 
-                CharSequence text =
-                        pm.getApplicationLabel(ai);
+            if (icon == null || label.equals(pkg)) {
+                try {
+                    ApplicationInfo ai =
+                            pm.getApplicationInfo(pkg, 0);
 
-                if (text != null) {
-                    label = text.toString();
-                }
+                    if (label.equals(pkg)) {
+                        CharSequence text =
+                                pm.getApplicationLabel(ai);
 
-                icon = pm.getApplicationIcon(ai);
-            } catch (Exception ignored) {}
+                        if (text != null) {
+                            label = text.toString();
+                        }
+                    }
+
+                    if (icon == null) {
+                        icon = pm.getApplicationIcon(ai);
+                    }
+                } catch (Exception ignored) {}
+            }
 
             result.add(new AppEntry(pkg, label, icon, userId, profileLabel));
         }
@@ -502,6 +520,45 @@ public class CloneManager {
                     "Mở bản sao thất bại: "
                             + r.allOutput().trim());
         }
+    }
+
+    /**
+     * Nhãn + icon của app trong đúng profile đó, qua LauncherApps.
+     * Trả về map package -> [label, icon]; rỗng nếu profile không thuộc
+     * nhóm profile của user hiện tại hoặc đang bị khóa.
+     */
+    private Map<String, Object[]> launcherEntries(int userId) {
+        Map<String, Object[]> map = new HashMap<>();
+        try {
+            android.content.pm.LauncherApps la = (android.content.pm.LauncherApps)
+                    ctx.getSystemService(Context.LAUNCHER_APPS_SERVICE);
+            if (la == null) return map;
+            for (android.os.UserHandle handle : la.getProfiles()) {
+                if (parseUserHandleId(handle) != userId) continue;
+                for (android.content.pm.LauncherActivityInfo info
+                        : la.getActivityList(null, handle)) {
+                    String pkg = info.getComponentName().getPackageName();
+                    if (map.containsKey(pkg)) continue;
+                    Drawable icon = null;
+                    try { icon = info.getIcon(0); } catch (Exception ignored) {}
+                    map.put(pkg, new Object[]{info.getLabel(), icon});
+                }
+            }
+        } catch (Exception ignored) {}
+        return map;
+    }
+
+    /** UserHandle không có API công khai lấy id — parse từ dạng "UserHandle{95}". */
+    private int parseUserHandleId(android.os.UserHandle handle) {
+        try {
+            String s = handle.toString();
+            int a = s.indexOf('{');
+            int b = s.indexOf('}', a);
+            if (a >= 0 && b > a) {
+                return Integer.parseInt(s.substring(a + 1, b));
+            }
+        } catch (Exception ignored) {}
+        return -1;
     }
 
     private String resolveLauncher(int userId, String pkg) throws Exception {
