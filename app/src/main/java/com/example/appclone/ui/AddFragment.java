@@ -146,7 +146,7 @@ public class AddFragment extends Fragment {
         progressDlg.show(getChildFragmentManager(), "progress");
         new Thread(() -> {
             try {
-                int userId = clones.getOrCreateCloneUser();
+                int userId = clones.getOrCreateOwnProfile();
                 setProgressStatus(R.string.cloning_step_setup);
                 clones.cloneApp(userId, pkg);
                 resultHandler.post(() -> resultManager.setFragmentResult(

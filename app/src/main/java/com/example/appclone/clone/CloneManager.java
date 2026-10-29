@@ -31,6 +31,9 @@ public class CloneManager {
     private static final String KEY_ENTRIES = "entries";
     private static final String KEY_USER_ID = "clone_user_id";
 
+    /** Tên profile do chính AppClone tạo — dấu hiệu nhận diện của mình. */
+    private static final String OWN_PROFILE_NAME = "AppClone";
+
     private static final Pattern USER_PATTERN =
             Pattern.compile("UserInfo\\{(\\d+):([^}:]+):");
 
@@ -239,11 +242,20 @@ public class CloneManager {
 
         int id = Integer.parseInt(m.group(1));
 
-        // Xác minh profile tạo ra thật sự được
-        // nhận diện trước khi sử dụng.
-        int found = findCloneUser();
+        // Xác minh trực tiếp profile vừa tạo trong danh sách hệ thống.
+        // KHÔNG dùng findCloneUser(): nó văng lỗi khi có nhiều CLONE
+        // profile (VD máy Samsung có sẵn Dual 95 + profile này).
+        boolean verified = false;
+        for (ProfileParser.Profile profile : profiles()) {
+            if (profile.id == id
+                    && profile.type.endsWith(".CLONE")
+                    && OWN_PROFILE_NAME.equals(profile.name)) {
+                verified = true;
+                break;
+            }
+        }
 
-        if (found != id) {
+        if (!verified) {
             throw new Exception(
                     "Đã tạo user " + id
                     + " nhưng chưa xác minh được "
@@ -267,11 +279,61 @@ public class CloneManager {
         return id;
     }
 
+    /** Profile có đúng là profile do AppClone tự tạo không. */
+    private boolean isOwnProfile(ProfileParser.Profile profile) {
+        return profile.type.endsWith(".CLONE")
+                && OWN_PROFILE_NAME.equals(profile.name);
+    }
+
+    /**
+     * Profile riêng của AppClone — đích nhân bản mặc định.
+     *
+     * KHÔNG dùng ké không gian Dual của Samsung (user 95): Samsung tự
+     * dọn các app không nằm trong danh sách Dual Messenger chính thức
+     * (đã xác nhận trên máy thật 2026-10-29 — mất không cần reboot).
+     *
+     * Nhận diện theo ID đã lưu + tên "AppClone" do chính app đặt khi
+     * tạo; không nhận bừa profile CLONE của hãng/công cụ khác.
+     * Chưa có thì tạo mới.
+     */
+    public int getOrCreateOwnProfile() throws Exception {
+        List<ProfileParser.Profile> all = profiles();
+
+        int saved = loadCloneUserId();
+        if (saved != -1) {
+            for (ProfileParser.Profile profile : all) {
+                if (profile.id == saved && isOwnProfile(profile)) {
+                    return saved;
+                }
+            }
+        }
+
+        for (ProfileParser.Profile profile : all) {
+            if (isOwnProfile(profile)) {
+                saveCloneUserId(profile.id);
+                return profile.id;
+            }
+        }
+
+        return createCloneUser();
+    }
+
     /**
      * Chỉ lấy profile hiện có.
      * KHÔNG tạo mới khi mở hoặc xóa ứng dụng.
+     * Ưu tiên profile riêng của AppClone; không có thì mới tới
+     * CLONE profile duy nhất còn lại (đường cũ cho shortcut legacy).
      */
     public int requireCloneUser() throws Exception {
+        int saved = loadCloneUserId();
+        if (saved != -1) {
+            for (ProfileParser.Profile profile : profiles()) {
+                if (profile.id == saved && isOwnProfile(profile)) {
+                    return saved;
+                }
+            }
+        }
+
         int id = findCloneUser();
 
         if (id == -1 || !userExists(id)) {
@@ -279,7 +341,6 @@ public class CloneManager {
                     "Không tìm thấy clone profile hợp lệ");
         }
 
-        saveCloneUserId(id);
         return id;
     }
 
