@@ -26,6 +26,8 @@
     <string name="empty_clones">Chưa có app nhân bản nào.\nBấm nút + Nhân bản để bắt đầu.</string>
     <string name="menu_delete">Xóa bản sao</string>
     <string name="menu_pin">Ghim ra màn hình chính</string>
+    <string name="warn_dual_title">Bản sao này nằm trong Dual của Samsung.</string>
+    <string name="warn_dual_body">Samsung có thể tự xoá nó bất cứ lúc nào. Muốn giữ lâu dài, hãy nhân bản lại — bản mới sẽ vào profile riêng của AppClone.</string>
     <string name="toast_pinned">Đã ghim %1$s ra màn hình chính</string>
     <string name="toast_pin_failed">Máy không hỗ trợ ghim shortcut</string>
     <string name="dialog_delete_title">Xóa bản nhân bản?</string>

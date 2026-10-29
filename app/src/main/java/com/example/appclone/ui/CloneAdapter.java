@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.appclone.R;
@@ -54,9 +55,21 @@ public class CloneAdapter extends RecyclerView.Adapter<CloneAdapter.Holder> {
     public void onBindViewHolder(@NonNull Holder h, int position) {
         AppEntry app = apps.get(position);
         h.name.setText(app.label);
-        h.sub.setText(app.userId >= 0
+        String pill = app.userId >= 0
                 ? shortProfile(app.profileLabel) + " · " + app.userId
-                : shortProfile(app.profileLabel));
+                : shortProfile(app.profileLabel);
+        if (app.samsungDual) {
+            // Bản sao trong Dual 95: pill đỏ + ⚠ — Samsung có thể tự xoá.
+            h.sub.setText("⚠ " + pill);
+            h.sub.setBackgroundResource(R.drawable.pill_bg_warn);
+            h.sub.setTextColor(ContextCompat.getColor(
+                    h.itemView.getContext(), R.color.danger_light));
+        } else {
+            h.sub.setText(pill);
+            h.sub.setBackgroundResource(R.drawable.pill_bg);
+            h.sub.setTextColor(ContextCompat.getColor(
+                    h.itemView.getContext(), R.color.ubuntu_orange));
+        }
         if (app.icon != null) {
             h.icon.setImageDrawable(app.icon);
         } else {

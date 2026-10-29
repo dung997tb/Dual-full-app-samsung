@@ -426,8 +426,16 @@ public class CloneManager {
 
         List<AppEntry> result = new ArrayList<>();
         String profileLabel = "Profile";
+        boolean samsungDual = false;
         for (ProfileParser.Profile profile : profiles()) {
-            if (profile.id == userId) { profileLabel = profile.label(); break; }
+            if (profile.id == userId) {
+                // Profile riêng hiện tên "AppClone" thay vì "Dual / Clone";
+                // profile Dual của Samsung gắn cờ cảnh báo bị tự xoá.
+                profileLabel = isOwnProfile(profile) ? OWN_PROFILE_NAME : profile.label();
+                samsungDual = profile.id == 95
+                        || "DUAL_APP".equalsIgnoreCase(profile.name);
+                break;
+            }
         }
 
         // Nhãn/icon đúng theo từng profile (app chỉ cài trong profile khác
@@ -473,7 +481,7 @@ public class CloneManager {
                 } catch (Exception ignored) {}
             }
 
-            result.add(new AppEntry(pkg, label, icon, userId, profileLabel));
+            result.add(new AppEntry(pkg, label, icon, userId, profileLabel, samsungDual));
         }
 
         result.sort((a, b) ->

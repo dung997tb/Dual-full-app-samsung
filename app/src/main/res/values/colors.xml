@@ -19,5 +19,10 @@
     <color name="mac_yellow">#FEBC2E</color>
     <color name="mac_green">#28C840</color>
     <color name="danger">#FF3B30</color>
+    <color name="danger_light">#FF6B5E</color>
+    <color name="danger_tint">#33FF3B30</color>
+    <color name="danger_box">#2E1818</color>
+    <color name="danger_stroke">#78322D</color>
+    <color name="danger_body">#FFAAA0</color>
     <color name="warning">#FEBC2E</color>
 </resources>

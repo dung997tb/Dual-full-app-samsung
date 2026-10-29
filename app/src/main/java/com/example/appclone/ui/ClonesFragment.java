@@ -12,7 +12,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -70,6 +69,31 @@ public class ClonesFragment extends Fragment {
         btnGrant.setOnClickListener(x -> host.requestShizukuPermission());
         fab.setOnClickListener(x -> host.goToAddTab());
         btnRefresh.setOnClickListener(x -> refresh());
+
+        // Nhận lựa chọn từ bottom sheet tuỳ chọn (chạm giữ 1 bản sao)
+        getChildFragmentManager().setFragmentResultListener(
+                CloneOptionsDialog.REQUEST_KEY, this, (requestKey, result) -> {
+                    AppEntry app = new AppEntry(
+                            result.getString(CloneOptionsDialog.KEY_PKG),
+                            result.getString(CloneOptionsDialog.KEY_LABEL),
+                            null,
+                            result.getInt(CloneOptionsDialog.KEY_USER_ID),
+                            result.getString(CloneOptionsDialog.KEY_PROFILE_LABEL));
+                    switch (result.getInt(CloneOptionsDialog.KEY_ACTION)) {
+                        case CloneOptionsDialog.ACTION_OPEN:
+                            onOpenClicked(app);
+                            break;
+                        case CloneOptionsDialog.ACTION_PARALLEL:
+                            onParallelClicked(app);
+                            break;
+                        case CloneOptionsDialog.ACTION_PIN:
+                            onPinClicked(app);
+                            break;
+                        default:
+                            confirmDelete(app);
+                            break;
+                    }
+                });
         return v;
     }
 
@@ -178,29 +202,7 @@ public class ClonesFragment extends Fragment {
     }
 
     private void onMenuClicked(AppEntry app, View anchor) {
-        PopupMenu menu = new PopupMenu(requireContext(), anchor);
-        menu.getMenu().add(0, 1, 0, getString(R.string.btn_open_clone));
-        menu.getMenu().add(0, 2, 1, getString(R.string.btn_parallel));
-        menu.getMenu().add(0, 3, 2, getString(R.string.menu_pin));
-        menu.getMenu().add(0, 4, 3, getString(R.string.menu_delete));
-        menu.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case 1:
-                    onOpenClicked(app);
-                    break;
-                case 2:
-                    onParallelClicked(app);
-                    break;
-                case 3:
-                    onPinClicked(app);
-                    break;
-                default:
-                    confirmDelete(app);
-                    break;
-            }
-            return true;
-        });
-        menu.show();
+        CloneOptionsDialog.newInstance(app).show(getChildFragmentManager(), "clone_options");
     }
 
     private void onPinClicked(AppEntry app) {
