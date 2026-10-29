@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,17 +24,20 @@ import androidx.fragment.app.DialogFragment;
 import com.example.appclone.R;
 import com.example.appclone.shizuku.ShizukuHelper;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * "Chẩn đoán Samsung Dual": chạy một loạt lệnh CHỈ ĐỌC qua Shizuku để
  * soi không gian Dual (user 95) và agent của Samsung
  * (com.samsung.android.da.daagent) — danh sách app trong Dual,
- * installer của từng app, settings liên quan tới Dual, provider và
- * thư mục dữ liệu của agent. Mục đích: tìm điểm khác nhau giữa bản
- * sao "chính chủ" (bật trong Cài đặt Dual Messenger) và bản sao do
- * AppClone cài qua shell, xem có đường nào để Samsung không tự xoá.
+ * installer của từng app, settings liên quan tới Dual, và đặc biệt là
+ * DualAppProvider của daagent (nơi được cho là giữ danh sách app
+ * được phép nhân bản). Có thêm ô gõ lệnh tự do để soi tiếp mà không
+ * cần build lại app.
  *
  * Kết quả hiện dạng text thô để người dùng sao chép gửi lại phân tích.
- * Không ghi/sửa bất cứ thứ gì trên máy.
+ * Các lệnh mặc định không ghi/sửa bất cứ thứ gì trên máy.
  */
 public class DiagnosticsDialog extends DialogFragment {
 
@@ -60,13 +64,26 @@ public class DiagnosticsDialog extends DialogFragment {
             {"Thu doc thu muc du lieu cua daagent (ky vong bi chan)",
              "ls -la /data/data/com.samsung.android.da.daagent/ 2>&1; echo '---'; "
                      + "ls /data/user/95/ 2>&1 | head -20"},
+            {"DualAppProvider: cau hinh quyen cua provider",
+             "dumpsys package com.samsung.android.da.daagent | grep -B1 -A10 'DualAppProvider'"},
+            {"Thu query DualAppProvider (authority goc)",
+             "content query --uri content://com.samsung.android.da.daagent.provider 2>&1 | head -30"},
+            {"Thu query DualAppProvider (cac duong con thuong gap)",
+             "content query --uri content://com.samsung.android.da.daagent.provider/dual_app 2>&1 | head -15; "
+                     + "content query --uri content://com.samsung.android.da.daagent.provider/apps 2>&1 | head -15; "
+                     + "content query --uri content://com.samsung.android.da.daagent.provider/dualapp 2>&1 | head -15"},
+            {"App trong Cong viec (user 10) de doi chieu",
+             "pm list packages --user 10; echo '--- installer:'; "
+                     + "pm list packages -i --user 10 | grep -vE 'installer=null'"},
     };
 
     private static final int MAX_SECTION_CHARS = 6000;
 
     private TextView tvText;
     private ScrollView scroll;
+    private EditText etCmd;
     private final StringBuilder report = new StringBuilder();
+    private final ExecutorService exec = Executors.newSingleThreadExecutor();
 
     @Nullable
     @Override
@@ -80,8 +97,10 @@ public class DiagnosticsDialog extends DialogFragment {
         super.onViewCreated(view, savedInstanceState);
         tvText = view.findViewById(R.id.diagText);
         scroll = view.findViewById(R.id.diagScroll);
+        etCmd = view.findViewById(R.id.diagCmdInput);
         view.findViewById(R.id.btnDiagClose).setOnClickListener(x -> dismiss());
         view.findViewById(R.id.btnDiagCopy).setOnClickListener(x -> copyReport());
+        view.findViewById(R.id.btnDiagRun).setOnClickListener(x -> runCustom());
         runProbes();
     }
 
@@ -97,34 +116,53 @@ public class DiagnosticsDialog extends DialogFragment {
         }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        exec.shutdownNow();
+    }
+
     private void runProbes() {
-        report.append("=== CHAN DOAN SAMSUNG DUAL — AppClone ===\n");
+        report.append("=== CHAN DOAN SAMSUNG DUAL v2 — AppClone ===\n");
         showReport();
-        new Thread(() -> {
+        exec.execute(() -> {
             for (String[] probe : PROBES) {
-                report.append("\n### ").append(probe[0]).append('\n');
-                report.append("$ ").append(probe[1]).append('\n');
-                try {
-                    ShizukuHelper.CommandResult r = ShizukuHelper.runCommand(probe[1]);
-                    String out = r.allOutput().trim();
-                    if (out.isEmpty()) {
-                        out = "(khong co output)";
-                    }
-                    if (out.length() > MAX_SECTION_CHARS) {
-                        out = out.substring(0, MAX_SECTION_CHARS) + "\n...(cat bot)";
-                    }
-                    report.append(out).append('\n');
-                    if (!r.isSuccess()) {
-                        report.append("(exit=").append(r.exitCode).append(")\n");
-                    }
-                } catch (Exception e) {
-                    report.append("LOI: ").append(e.getMessage()).append('\n');
-                }
-                showReport();
+                runOne(probe[0], probe[1]);
             }
-            report.append("\n=== HET ===\n");
+            report.append("\n=== HET PHAN TU DONG ===\n");
             showReport();
-        }).start();
+        });
+    }
+
+    private void runCustom() {
+        if (etCmd == null) return;
+        String cmd = etCmd.getText().toString().trim();
+        if (cmd.isEmpty()) return;
+        etCmd.setText("");
+        exec.execute(() -> runOne("Lenh tuy y", cmd));
+    }
+
+    /** Chạy 1 lệnh và nối kết quả vào báo cáo. Phải gọi trên exec thread. */
+    private void runOne(String title, String cmd) {
+        report.append("\n### ").append(title).append('\n');
+        report.append("$ ").append(cmd).append('\n');
+        try {
+            ShizukuHelper.CommandResult r = ShizukuHelper.runCommand(cmd);
+            String out = r.allOutput().trim();
+            if (out.isEmpty()) {
+                out = "(khong co output)";
+            }
+            if (out.length() > MAX_SECTION_CHARS) {
+                out = out.substring(0, MAX_SECTION_CHARS) + "\n...(cat bot)";
+            }
+            report.append(out).append('\n');
+            if (!r.isSuccess()) {
+                report.append("(exit=").append(r.exitCode).append(")\n");
+            }
+        } catch (Exception e) {
+            report.append("LOI: ").append(e.getMessage()).append('\n');
+        }
+        showReport();
     }
 
     private void showReport() {

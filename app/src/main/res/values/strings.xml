@@ -71,6 +71,8 @@
     <string name="diag_running">Đang thu thập…</string>
     <string name="diag_copy">Sao chép kết quả</string>
     <string name="diag_copied">Đã sao chép — dán vào chat để gửi</string>
+    <string name="diag_cmd_hint">Gõ lệnh shell (chỉ đọc)…</string>
+    <string name="diag_run">Chạy</string>
     <string name="row_native_title">Công nghệ Native Profile</string>
     <string name="row_native_desc">Tận dụng phân vùng độc lập của hệ điều hành, an toàn, không bị chặn</string>
     <string name="row_perf_title">Hiệu năng tối đa</string>
