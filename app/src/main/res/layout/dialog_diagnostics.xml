@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@color/card"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/diag_title"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/diag_hint"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <ScrollView
+            android:id="@+id/diagScroll"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:layout_marginTop="14dp"
+            android:background="@color/bg"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/diagText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="@string/diag_running"
+                android:textColor="@color/text_primary"
+                android:textIsSelectable="true"
+                android:textSize="11.5sp" />
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnDiagClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_outline"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="@string/dialog_close"
+                android:textAllCaps="false"
+                android:textColor="@color/ubuntu_orange"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btnDiagCopy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/btn_primary"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="@string/diag_copy"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

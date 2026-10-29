@@ -37,6 +37,7 @@ public class SettingsFragment extends Fragment {
         v.findViewById(R.id.rowGuide).setOnClickListener(x -> host.showShizukuGuide());
         v.findViewById(R.id.rowPerm).setOnClickListener(x -> onPermRowClicked());
         v.findViewById(R.id.rowMedia).setOnClickListener(x -> onMediaRowClicked());
+        v.findViewById(R.id.rowDiag).setOnClickListener(x -> onDiagRowClicked());
         v.findViewById(R.id.rowNative).setOnClickListener(x ->
                 infoDialog(getString(R.string.row_native_title), getString(R.string.row_native_desc)));
         v.findViewById(R.id.rowPerf).setOnClickListener(x ->
@@ -89,6 +90,15 @@ public class SettingsFragment extends Fragment {
                 uiToast(getString(R.string.toast_error, e.getMessage()));
             }
         }).start();
+    }
+
+    /** Mở hộp thoại chẩn đoán Samsung Dual (lệnh chỉ đọc qua Shizuku). */
+    private void onDiagRowClicked() {
+        if (!ShizukuHelper.hasPermission()) {
+            Toast.makeText(getContext(), R.string.toast_need_shizuku, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new DiagnosticsDialog().show(getParentFragmentManager(), "diagnostics");
     }
 
     private void infoDialog(String title, String msg) {
